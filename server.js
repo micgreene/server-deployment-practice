@@ -1,32 +1,47 @@
 'use strict';
 
-//assigning dependencies
+//dependencies
 const express = require('express');
-const stamper = required('./middleware/stamper.js');
+const app = express();
+
+//handlers
 const notFoundHandler = require('./handlers/404.js');
 const errorHandler = require('./handlers/500.js');
 
-const app = express();
-//const PORT = process.env.PORT || 3000;
+//middleware
+const stamper = require('./middleware/stamper.js');
 
-function start(port){
-  app.listen(port, () => {
-    console.log(`listening on Port:${port}`);
-  });
-}
 
-app.get('/',stamper, (req, res) => {
-  res.status(200).send('welcome home');
+//routes
+//the 'stamper' parameter gives us the time stamp we created in the middleware javascript
+app.get('/', stamper, (req, res) => {
+  res.status(200).send('Hello World')
+})
 
-  let output = {
-    time: req.timestamp
+app.get('/data', stamper, (req, res) => {
+  let outputObject = {
+    10: "even",
+    5: "odd",
+    "time": req.timestamp // we got this from the middleware
   }
+
+  res.status(200).json(outputObject);
+});
+
+app.get('/bad', (req, res, next) => {
+  next('you messsed up')
 });
 
 app.use('*', notFoundHandler);
-//error handler should always be the last route in the server so it is not used too early
 app.use(errorHandler);
 
+
+//starts listening at selected port
+function start(port) {
+  app.listen(port, () => console.log(`Server up on port ${port}`))
+}
+
+//exports the instance of expresss() and the function to start the server to the app
 module.exports = {
   app: app,
   start: start

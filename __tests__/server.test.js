@@ -1,22 +1,40 @@
-'use strict'
+'use strict';
 
-const { hasUncaughtExceptionCaptureCallback } = require('process');
+//get dependencies
 const supertest = require('supertest');
-const { isMainThread } = require('worker_threads');
-const server = require ('../server.js');
+const server = require('../server.js');
 const request = supertest(server.app);
 
-//describe => test suite
-//it => actual test
-//expect => assertions as part of a larger test
-describe('SERVER:', () => {
-  it('handles invalid request', async () => {
-    const response = await request.get('/random');
-    expect(response.status).toEqual(404);
-  });
+//creates test parameters
+describe('API Server', () => {
 
-  it('should send back hello on a / route', async () => {
-    const response = await request.get('/data');
+  it('handles invalid requests', async () => {
+    const response = await request.get('/foo');
     expect(response.status).toEqual(404);
-  });
+  })
+
+  it('handles errors', async () => {
+    const response = await request.get('/bad');
+    expect(response.status).toEqual(500);
+    expect(response.body.route).toEqual('/bad');
+  })
+
+  it('/ works', async () => {
+    const response = await request.get('/');
+    expect(response.status).toEqual(200);
+    expect(response.text).toEqual('Hello World');
+  })
+
+  it('/data works', async () => {
+    const response = await request.get('/data');
+    expect(response.status).toEqual(200);
+    expect(typeof response.body).toEqual('object');
+  })
+
+  it('stamper middleware works', async () => {
+    const response = await request.get('/data');
+    expect(response.status).toEqual(200);
+    expect(response.body.time).toBeDefined();
+  })
+
 });
